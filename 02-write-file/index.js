@@ -18,6 +18,7 @@ stdin.on('data', data => {
     stdout.write(`\nGoodby!`);
     process.exit();
   }
+  console.log(data)
   stdout.write(`\nYou add to file text2.txt phrase: ${name}`);
   fs.appendFile(
     path.join(__dirname,'text2.txt'),
