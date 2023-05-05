@@ -7,19 +7,22 @@ fs.writeFile(
     '',
     (err) => {
         if (err) throw err;
-        //console.log('Файл был создан');
     }
 );
 
-stdout.write('Hello RSS-scool student! Write please some phrase...\n')
+stdout.write('\nПривет RSS-scool студент! Напиши какую-нибудь фразу...\n')
+process.on('SIGINT', () => {
+    stdout.write('\nУдачи в изучении Node.js!\n');
+    process.exit();
+  });
 stdin.on('data', data => {
   const name = data.toString();
-  if (name == 'exit') {
-    stdout.write(`\nGoodby!`);
+  const name2 = data.toString().trim();
+  if (name2 === 'exit') {
+    stdout.write('\nУдачи в изучении Node.js!\n');
     process.exit();
   }
-  console.log(data)
-  stdout.write(`\nYou add to file text2.txt phrase: ${name}`);
+  stdout.write(`\nВы добавили в файл text2 следующую фразу: ${name}\n`);
   fs.appendFile(
     path.join(__dirname,'text2.txt'),
     name,
@@ -28,3 +31,4 @@ stdin.on('data', data => {
     } 
 );
 });
+
