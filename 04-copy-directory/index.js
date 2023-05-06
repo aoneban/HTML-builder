@@ -1,18 +1,33 @@
 
 const fs = require('fs');
 const path = require('path');
-//const { copyFile, constants } = require('promises');
 
-fs.mkdir(path.join(__dirname, 'files-copy'), err => {
-    if (err) throw err;
-    console.log('Папка была создана');
+const sourceDir = path.join(__dirname, 'files');
+const destinationDir = path.join(__dirname, 'files-copy');
+
+fs.mkdir(destinationDir, { recursive: true }, (err) => {
+  if (err) {
+    console.error(`Error: ${err}`);
+    return;
+  }
+
+  fs.readdir(sourceDir, (err, files) => {
+    if (err) {
+      console.error(`Error: ${err}`);
+      return;
+    }
+
+    files.forEach((file) => {
+      const sourcePath = path.join(sourceDir, file);
+      const destinationPath = path.join(destinationDir, file);
+
+      fs.copyFile(sourcePath, destinationPath, (err) => {
+        if (err) {
+          console.error(`Error: ${err}`);
+        } else {
+          console.log(`Copied file: ${sourcePath}`);
+        }
+      });
+    });
+  });
 });
-
-//import { copyFile, constants } from 'node:fs/promises';
-
-try {
-  await fs.copyFile('files', 'files-copy');
-  console.log('files was copied to files-copy');
-} catch {
-  console.log('The file could not be copied');
-}
