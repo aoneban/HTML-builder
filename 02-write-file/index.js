@@ -10,7 +10,7 @@ fs.writeFile(
     }
 );
 
-stdout.write('\nПривет RSS-scool студент! Напиши какую-нибудь фразу...\n')
+stdout.write('\nПривет, RSS-scool студент! Напиши какую-нибудь фразу...\n')
 process.on('SIGINT', () => {
     stdout.write('\nУдачи в изучении Node.js!\n');
     process.exit();
