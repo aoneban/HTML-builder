@@ -44,7 +44,6 @@ fs.readFile(filePath, 'utf8', (err, data) => {
       readComponentFile('header.html', '{{header}}'),
       readComponentFile('articles.html', '{{articles}}'),
       readComponentFile('footer.html', '{{footer}}'),
-      readComponentFile('about.html', '{{about}}'),
     ])
       .then(() => {
         fs.writeFile(filePath, data, 'utf8', (err) => {
