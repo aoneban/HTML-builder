@@ -11,7 +11,6 @@ fs.readFile(filePath, 'utf8', (err, data) => {
     console.error(`Error: ${err}`);
     return;
   }
-  console.log(data);
   const filePath = path.join(__dirname, 'project-dist', 'index.html');
   const fileContent = data;
   fs.writeFile(filePath, fileContent, 'utf8', (err) => {
@@ -45,6 +44,7 @@ fs.readFile(filePath, 'utf8', (err, data) => {
       readComponentFile('header.html', '{{header}}'),
       readComponentFile('articles.html', '{{articles}}'),
       readComponentFile('footer.html', '{{footer}}'),
+      readComponentFile('about.html', '{{about}}'),
     ])
       .then(() => {
         fs.writeFile(filePath, data, 'utf8', (err) => {

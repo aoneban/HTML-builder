@@ -1,22 +1,23 @@
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
 
-fs.readdir(path.join(__dirname, 'secret-folder'), (err, files) => {
-  if (err) console.log(err);
-  else {
-    console.log('\nCurrent files in secret-folder:');
-    files.forEach((file) => {
-      if (fs.statSync('03-files-in-folder/secret-folder/' + file).size !== 0) {
-        console.log(
-          '``` ' +
-            file.slice(0, file.indexOf('.')) +
-            '\t -  ' +
-            path.extname(file).slice(1) +
-            '\t -  ' +
-            fs.statSync('03-files-in-folder/secret-folder/' + file).size +
-            ' bite ```'
-        );
+async function readDirectory() {
+  try {
+    const directoryPath = path.join(__dirname, 'secret-folder');
+    const files = await fs.readdir(directoryPath, { withFileTypes: true });
+
+    for (const file of files) {
+      if (file.isFile()) {
+        const filePath = path.join(directoryPath, file.name);
+        const stats = await fs.stat(filePath);
+
+        console.log('``` ' + file.name.replace(/\..+$/, '') + ' - ' + 
+        path.extname(file.name).replace('.', '') + ' - ' + stats.size + 'кб' + ' ```');
       }
-    });
+    }
+  } catch (err) {
+    console.error(err);
   }
-});
+}
+
+readDirectory();

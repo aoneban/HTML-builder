@@ -1,8 +1,33 @@
 const fs = require('fs');
 const path = require('path');
 
-const sourceDir = path.join(__dirname, 'files');
-const resultDir = path.join(__dirname, 'files-copy');
+function checkAndRemoveDirectory(directoryPath) {
+  return new Promise((resolve, reject) => {
+    fs.access(directoryPath, fs.constants.F_OK, (error) => {
+      if (error) {
+        resolve(false);
+      } else {
+        fs.rmdir(directoryPath, (error) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(true);
+          }
+        });
+      }
+    });
+  });
+}
+
+const folder = path.join(__dirname, '04-copy-directory', 'files-copy');
+
+checkAndRemoveDirectory(folder)
+  .then((removed) => {
+    if (removed) {
+      console.log(`Directory ${folder} deleted.`);
+    } else {
+      const sourceDir = path.join(__dirname, 'files');
+      const resultDir = path.join(__dirname, 'files-copy');
 
 fs.mkdir(resultDir, { recursive: true }, (err) => {
   if (err) {
@@ -30,3 +55,10 @@ fs.mkdir(resultDir, { recursive: true }, (err) => {
     });
   });
 });
+    }
+  })
+  .catch((error) => {
+    console.error('Error:', error);
+  });
+
+

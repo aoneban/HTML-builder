@@ -18,8 +18,8 @@ stdin.on('data', (data) => {
     stdout.write('\nУдачи в изучении Node.js!\n');
     process.exit();
   }
-  stdout.write(`\nВы добавили в файл text2 следующую фразу: ${name}\n`);
-  fs.appendFile(path.join(__dirname, 'text2.txt'), name, (err) => {
+  stdout.write(`\nВы добавили в файл textForWords следующую фразу: ${name}\n`);
+  fs.appendFile(path.join(__dirname, 'textForWords.txt'), name, (err) => {
     if (err) throw err;
   });
 });
