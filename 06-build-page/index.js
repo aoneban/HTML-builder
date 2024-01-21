@@ -1,166 +1,98 @@
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
 
-const destinationDir = path.join(__dirname, 'project-dist');
-const sourceDirTwo = path.join(__dirname, 'assets');
-const destinationDirTwo = path.join(__dirname, 'project-dist', 'assets');
+const goalDir = path.join(__dirname, 'project-dist');
+const startingDirTwo = path.join(__dirname, 'assets');
+const goalDirTwo = path.join(__dirname, 'project-dist', 'assets');
 const filePath = path.join(__dirname, 'template.html');
 
-fs.readFile(filePath, 'utf8', (err, data) => {
-  if (err) {
-    console.error(`Error: ${err}`);
-    return;
-  }
-  const filePath = path.join(__dirname, 'project-dist', 'index.html');
-  const fileContent = data;
-  fs.writeFile(filePath, fileContent, 'utf8', (err) => {
-    if (err) {
-      console.error(`Error: ${err}`);
-      return;
-    }
-    console.log(`File ${filePath} created successfully.`);
-  });
-  const componentsDir = path.join(__dirname, 'components');
-  fs.readFile(filePath, 'utf8', (err, data) => {
-    if (err) {
-      console.error(`Error: ${err}`);
-      return;
-    }
-    function readComponentFile(componentFile, placeholder) {
-      return new Promise((resolve, reject) => {
-        const componentFilePath = path.join(componentsDir, componentFile);
-        fs.readFile(componentFilePath, 'utf8', (err, componentData) => {
-          if (err) {
-            reject(`Error: ${err}`);
-            return;
-          }
-          data = data.replace(placeholder, componentData);
-          resolve();
-        });
-      });
-    }
+async function readComponentFiles(componentsDir) {
+  try {
+    const files = await fs.readdir(componentsDir);
 
-    Promise.all([
-      readComponentFile('header.html', '{{header}}'),
-      readComponentFile('articles.html', '{{articles}}'),
-      readComponentFile('footer.html', '{{footer}}'),
-    ])
-      .then(() => {
-        fs.writeFile(filePath, data, 'utf8', (err) => {
-          if (err) {
-            console.error(`Error: ${err}`);
-            return;
-          }
-
-          console.log(`File ${filePath} created successfully.`);
-        });
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  });
-});
-
-function copyDirectoryRec(source, destination, callback) {
-  fs.mkdir(destination, { recursive: true }, (err) => {
-    if (err) {
-      callback(err);
-      return;
-    }
-
-    fs.readdir(source, (err, files) => {
-      if (err) {
-        callback(err);
-        return;
-      }
-
-      files.forEach((file) => {
-        const sourcePath = path.join(source, file);
-        const destinationPath = path.join(destination, file);
-
-        fs.stat(sourcePath, (err, stats) => {
-          if (err) {
-            callback(err);
-            return;
-          }
-
-          if (stats.isFile()) {
-            fs.copyFile(sourcePath, destinationPath, (err) => {
-              if (err) {
-                callback(err);
-              } else {
-                console.log(`Copied file: ${sourcePath}`);
-              }
-            });
-          } else if (stats.isDirectory()) {
-            copyDirectoryRec(sourcePath, destinationPath, callback);
-          }
-        });
-      });
-
-      callback(null);
+    const componentProm = files.map(async (file) => {
+      const placeholder = `{{${file.replace('.html', '')}}}`;
+      const componentPath = path.join(componentsDir, file);
+      const componentData = await fs.readFile(componentPath, 'utf8');
+      return { placeholder, componentData };
     });
-  });
+
+    return Promise.all(componentProm);
+  } catch (error) {
+    throw new Error(`Error: ${error}`);
+  }
 }
 
-copyDirectoryRec(sourceDirTwo, destinationDirTwo, (err) => {
-  if (err) {
-    console.error(`Error: ${err}`);
-  } else {
-    console.log('Success');
+async function loadComponents() {
+  try {
+    const componentsDir = path.join(__dirname, 'components');
+    const components = await readComponentFiles(componentsDir);
+    let data = await fs.readFile(filePath, 'utf8');
+    components.forEach(({ placeholder, componentData }) => {
+      data = data.replace(placeholder, componentData);
+    });
+    const indexPath = path.join(goalDir, 'index.html');
+    await fs.writeFile(indexPath, data, 'utf8');
+    console.log(`File ${indexPath} created width success.`);
+  } catch (error) {
+    throw new Error(`Error: ${error}`);
   }
-});
+}
 
-fs.mkdir(destinationDir, { recursive: true }, (err) => {
-  if (err) {
-    console.error(`Error: ${err}`);
-    return;
-  }
-  fs.readFile(
-    path.join(__dirname, 'styles', 'header.css'),
-    'utf8',
-    (err, data1) => {
-      if (err) {
-        console.error(`Error: ${err}`);
-        return;
-      }
-
-      fs.readFile(
-        path.join(__dirname, 'styles', 'main.css'),
-        'utf8',
-        (err, data2) => {
-          if (err) {
-            console.error(`Error: ${err}`);
-            return;
-          }
-
-          fs.readFile(
-            path.join(__dirname, 'styles', 'footer.css'),
-            'utf8',
-            (err, data3) => {
-              if (err) {
-                console.error(`Error: ${err}`);
-                return;
-              }
-
-              const combinedData = data1 + data2 + data3;
-
-              fs.writeFile(
-                path.join(__dirname, 'project-dist', 'style.css'),
-                combinedData,
-                'utf8',
-                (err) => {
-                  if (err) {
-                    console.error(`Error: ${err}`);
-                  } else {
-                    console.log(`Success`);
-                  }
-                }
-              );
-            }
-          );
+async function copyDirectoryRec(starting, goal) {
+  try {
+    await fs.mkdir(goal, { recursive: true });
+    const files = await fs.readdir(starting);
+    await Promise.all(
+      files.map(async (file) => {
+        const startingPath = path.join(starting, file);
+        const goalPath = path.join(goal, file);
+        const stats = await fs.stat(startingPath);
+        if (stats.isFile()) {
+          await fs.copyFile(startingPath, goalPath);
+          console.log(`Copy: ${startingPath}`);
+        } else if (stats.isDirectory()) {
+          await copyDirectoryRec(startingPath, goalPath);
         }
-      );
-    }
-  );
-});
+      }),
+    );
+  } catch (error) {
+    throw new Error(`Error: ${error}`);
+  }
+}
+
+async function createStyleFile() {
+  try {
+    const stylesDir = path.join(__dirname, 'styles');
+    const styleFiles = await fs.readdir(stylesDir);
+    const stylePromises = styleFiles.map(async (file) => {
+      const stylePath = path.join(stylesDir, file);
+      return await fs.readFile(stylePath, 'utf8');
+    });
+
+    const combinedStyleData = (await Promise.all(stylePromises)).join('\n');
+    await fs.writeFile(
+      path.join(__dirname, 'project-dist', 'style.css'),
+      combinedStyleData,
+      'utf8',
+    );
+    console.log('success');
+  } catch (error) {
+    throw new Error(`Error: ${error}`);
+  }
+}
+
+async function main() {
+  try {
+    await copyDirectoryRec(startingDirTwo, goalDirTwo);
+    console.log('Success');
+    await loadComponents();
+    await createStyleFile();
+    await fs.mkdir(goalDir, { recursive: true });
+    console.log('success');
+  } catch (error) {
+    console.error(`Error: ${error}`);
+  }
+}
+
+main();
