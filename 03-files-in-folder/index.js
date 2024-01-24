@@ -11,8 +11,16 @@ async function readDirectory() {
         const filePath = path.join(directoryPath, file.name);
         const stats = await fs.stat(filePath);
 
-        console.log('``` ' + file.name.replace(/\..+$/, '') + ' - ' + 
-        path.extname(file.name).replace('.', '') + ' - ' + stats.size + 'кб' + ' ```');
+        console.log(
+          '``` ' +
+            file.name.replace(/\..+$/, '') +
+            ' - ' +
+            path.extname(file.name).replace('.', '') +
+            ' - ' +
+            stats.size +
+            'кб' +
+            ' ```',
+        );
       }
     }
   } catch (err) {
