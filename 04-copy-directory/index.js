@@ -1,64 +1,55 @@
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
 
-function checkAndRemoveDirectory(directoryPath) {
-  return new Promise((resolve, reject) => {
-    fs.access(directoryPath, fs.constants.F_OK, (error) => {
-      if (error) {
-        resolve(false);
-      } else {
-        fs.rmdir(directoryPath, (error) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(true);
-          }
-        });
-      }
-    });
-  });
+const sourceDir = path.join(__dirname, 'files');
+const resultDir = path.join(__dirname, 'files-copy');
+
+async function checkAndCreateDirectory(directoryPath) {
+  try {
+    await fs.access(directoryPath, fs.constants.F_OK);
+  } catch (error) {
+    await fs.mkdir(directoryPath, { recursive: true });
+  }
 }
 
-const folder = path.join(__dirname, '04-copy-directory', 'files-copy');
-
-checkAndRemoveDirectory(folder)
-  .then((removed) => {
-    if (removed) {
-      console.log(`Directory ${folder} deleted.`);
-    } else {
-      const sourceDir = path.join(__dirname, 'files');
-      const resultDir = path.join(__dirname, 'files-copy');
-
-fs.mkdir(resultDir, { recursive: true }, (err) => {
-  if (err) {
-    console.error(`Error: ${err}`);
-    return;
+async function removeFiles() {
+  try {
+    const filesCopy = await fs.readdir(resultDir);
+    const removePromises = filesCopy.map(async (file) => {
+      const filePath = path.join(resultDir, file);
+      await fs.unlink(filePath);
+    });
+    await Promise.all(removePromises);
+    console.log('Success');
+  } catch (error) {
+    console.error('Error:', error);
   }
+}
 
-  fs.readdir(sourceDir, (err, files) => {
-    if (err) {
-      console.error(`Error: ${err}`);
-      return;
-    }
-
-    files.forEach((file) => {
+async function copyFiles() {
+  try {
+    const files = await fs.readdir(sourceDir);
+    const copyPromises = files.map(async (file) => {
       const sourcePath = path.join(sourceDir, file);
       const destinationPath = path.join(resultDir, file);
-
-      fs.copyFile(sourcePath, destinationPath, (err) => {
-        if (err) {
-          console.error(`Error: ${err}`);
-        } else {
-          console.log(`Copied file: ${sourcePath}`);
-        }
-      });
+      await fs.copyFile(sourcePath, destinationPath);
+      console.log(`Copied: ${sourcePath}`);
     });
-  });
-});
-    }
-  })
-  .catch((error) => {
+    await Promise.all(copyPromises);
+    console.log('Success');
+  } catch (error) {
     console.error('Error:', error);
-  });
+  }
+}
 
+async function main() {
+  try {
+    await checkAndCreateDirectory(resultDir);
+    await removeFiles();
+    await copyFiles();
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
 
+main();
